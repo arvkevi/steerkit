@@ -1,5 +1,6 @@
 site_name: steerkit
 site_description: Concept-first linear probes and activation steering, reproducible across many open-weight models.
+site_url: https://arvkevi.github.io/steerkit/
 repo_url: https://github.com/arvkevi/steerkit
 edit_uri: ""
 docs_dir: docs
