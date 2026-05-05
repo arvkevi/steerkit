@@ -3395,28 +3395,43 @@ Layers not in the top-K are not evaluated and not present in the return.</p>
 
 
 <h3 id="steerkit.extract.extract_activations" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">steerkit</span><span class="o">.</span><span class="n">extract</span><span class="o">.</span><span class="n">extract_activations</span><span class="p">(</span><span class="n">pairs</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">hook_site</span><span class="o">=</span><span class="s1">&#39;resid_post&#39;</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_boundaries</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">steerkit</span><span class="o">.</span><span class="n">extract</span><span class="o">.</span><span class="n">extract_activations</span><span class="p">(</span><span class="n">pairs</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">hook_site</span><span class="o">=</span><span class="s1">&#39;resid_post&#39;</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_boundaries</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;last&#39;</span><span class="p">)</span></code>
 
 <a href="#steerkit.extract.extract_activations" class="headerlink" title="Permanent link">&para;</a></h3>
 
 
     <div class="doc doc-contents first">
 
-        <p>Extract last-token activations for each (positive, negative) response in each pair, per layer.</p>
+        <p>Extract pooled activations for each (positive, negative) response in each pair, per layer.</p>
 <p>Returns a dict mapping layer index -&gt; tensor of shape [n_pairs, 2, d_model].
 Layer index 0 is the positive response and 1 is the negative response in the second axis.</p>
 <p>With <code>include_boundaries=True</code> (default), the dict also contains entries at:
   - layer = -1   (embedding output, TL hook 'hook_embed')
   - layer = n_layers (final layernorm output, TL hook 'ln_final.hook_normalized')
 These let the cheap-tier sweep span [embed → 0..N-1 → final_ln] in one pass.</p>
+<p><code>pooling</code> selects how the per-token residual stream is reduced to a single
+[d_model] vector per (pair, response):</p>
+<ul>
+<li><strong>"last"</strong> (default): final real-token position. Standard for decoder-only
+    autoregressive LMs (Qwen / Llama / Gemma / Pythia / GPT-2): causal
+    attention means the last token has attended to everything before it,
+    so it carries a "summary" of the response.</li>
+<li><strong>"mean"</strong>: average across all real positions. <strong>Use this for encoder
+    models</strong> (BERT, RoBERTa, DeBERTa, ...) — bidirectional attention means
+    every position sees the whole input, so the last token has no special
+    summary status. Mean-pooling matches BERT-style classification heads.</li>
+<li><strong>"max"</strong>: element-wise max across real positions. Picks up punctate
+    signals at unknown positions; less common but occasionally useful.</li>
+</ul>
 <p><code>cache_dir</code>: optional directory for a Zarr v3 activation cache. The cache key
-is derived from (model_id, hook_site, include_boundaries, pairs hash). On a
-cache hit we skip the model entirely and load tensors from disk.</p>
+is derived from (model_id, hook_site, include_boundaries, pooling, pairs hash).
+On a cache hit we skip the model entirely and load tensors from disk.</p>
 <p><code>batch_size</code>: number of (pair, response) sequences run through the model in a
-single forward pass. Sequences are right-padded to max length per batch; causal
-attention guarantees pads don't pollute real-token activations. Set to 1 for
-a strictly sequential path (e.g. for memory-constrained big models). Default 8
-is a reasonable speedup-to-memory tradeoff for ≤4B-parameter models on MPS.</p>
+single forward pass. Sequences are right-padded to max length per batch; pad
+positions are sliced off before pooling so they never affect mean/max. Set to
+1 for a strictly sequential path (e.g. for memory-constrained big models).
+Default 8 is a reasonable speedup-to-memory tradeoff for ≤4B-parameter models
+on MPS.</p>
 
 
     </div>
@@ -3427,7 +3442,7 @@ is a reasonable speedup-to-memory tradeoff for ≤4B-parameter models on MPS.</p
 
 
 <h3 id="steerkit.extract.extract_group_activations" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">steerkit</span><span class="o">.</span><span class="n">extract</span><span class="o">.</span><span class="n">extract_group_activations</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">hook_site</span><span class="o">=</span><span class="s1">&#39;resid_post&#39;</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_boundaries</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">steerkit</span><span class="o">.</span><span class="n">extract</span><span class="o">.</span><span class="n">extract_group_activations</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">hook_site</span><span class="o">=</span><span class="s1">&#39;resid_post&#39;</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_boundaries</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;last&#39;</span><span class="p">)</span></code>
 
 <a href="#steerkit.extract.extract_group_activations" class="headerlink" title="Permanent link">&para;</a></h3>
 

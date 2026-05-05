@@ -895,6 +895,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#activation-pooling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Activation pooling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#layer-scope" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1028,6 +1039,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#activation-pooling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Activation pooling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#layer-scope" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1139,13 +1161,21 @@
 </tbody>
 </table>
 <p><code>Probe.steer(..., op=...)</code> dispatches; convenience methods <code>ablate / clamp / amplify</code> wrap.</p>
+<h2 id="activation-pooling">Activation pooling<a class="headerlink" href="#activation-pooling" title="Permanent link">&para;</a></h2>
+<p><code>extract_activations(..., pooling=...)</code> selects how the per-token residual stream collapses to a single <code>[d_model]</code> vector per (pair, response):</p>
+<ul>
+<li><strong><code>"last"</code></strong> (default) — final real-token position. The standard choice for decoder-only LMs (Qwen / Llama / Gemma / Pythia / GPT-2): causal attention means the last token has attended to everything before it, so it carries a "summary" of the response.</li>
+<li><strong><code>"mean"</code></strong> — average across all real positions. Required for <strong>encoder models</strong> (BERT, RoBERTa, DeBERTa) where bidirectional attention means no position has special "summary" status; matches BERT-style classification heads.</li>
+<li><strong><code>"max"</code></strong> — element-wise max across real positions. Picks up punctate signals at unknown positions.</li>
+</ul>
+<p>Pad positions are sliced off before pooling so they never contaminate mean/max in the batched extraction path. The cache signature includes the pooling mode so different strategies don't collide; existing <code>"last"</code>-pooled caches keep their original signatures and remain reusable.</p>
 <h2 id="layer-scope">Layer scope<a class="headerlink" href="#layer-scope" title="Permanent link">&para;</a></h2>
 <p>Default: single best layer. Opt-in: window-of-(2k+1) via <code>window(probes, center_layer, k=1)</code>. Out of scope (research-grade): full all-layers weighted ensemble.</p>
 <h2 id="layer-indexing">Layer indexing<a class="headerlink" href="#layer-indexing" title="Permanent link">&para;</a></h2>
 <p>Probes carry their layer in both absolute index and normalized depth (<code>(layer + 1) / (n_total_layers + 1)</code>, so embed=0.0, final_ln=1.0). The normalized depth is what makes layer curves comparable across models with different layer counts in the layer-selection visualization — but it's a methodology-comparison metric, not a vector-transfer mechanism.</p>
 <h2 id="storage">Storage<a class="headerlink" href="#storage" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Activation cache</strong> — Zarr v3 directory keyed by (model_id, hook_site, include_boundaries, dataset hash). Skip the model entirely on a cache hit.</li>
+<li><strong>Activation cache</strong> — Zarr v3 directory keyed by (model_id, hook_site, include_boundaries, pooling, dataset hash). Skip the model entirely on a cache hit.</li>
 <li><strong>Probe artifact</strong> — single <code>.probe.safetensors</code> file with three direction tensors (logistic / diff_of_means / mass_mean) + biases + metrics + JSON metadata. One file = one drop-in artifact.</li>
 <li><strong>GroupFit</strong> — directory: <code>group.json</code> snapshot + one <code>.probe.safetensors</code> per concept + optional <code>multinomial.probe.safetensors</code>.</li>
 <li><strong>GGUF</strong> — <code>Probe.export_gguf(path)</code> and <code>CompositeProbe.export_gguf(path)</code> write llama.cpp-compatible control vectors (one tensor per source layer).</li>
