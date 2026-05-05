@@ -1,0 +1,3504 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Concept-first linear probes and activation steering, reproducible across many open-weight models.">
+      
+      
+      
+        <link rel="canonical" href="https://arvkevi.github.io/steerkit/api/probe/">
+      
+      
+        <link rel="prev" href="../data/">
+      
+      
+        <link rel="next" href="../intervention/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Probes & sweeps - steerkit</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#probes-sweeps" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="steerkit" class="md-header__button md-logo" aria-label="steerkit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            steerkit
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Probes & sweeps
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/arvkevi/steerkit" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../quickstart/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quickstart
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../workflow/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Workflow
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../concepts/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Concept gallery
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../cli/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  CLI reference
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../data/" class="md-tabs__link">
+          
+  
+  
+  API reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../design/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Design
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="steerkit" class="md-nav__button md-logo" aria-label="steerkit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    steerkit
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/arvkevi/steerkit" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concept gallery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data primitives
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Probes & sweeps
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Probes & sweeps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Probe
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Probe">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.direction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        direction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.auc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        auc
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.fit_all" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fit_all
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.best_layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        best_layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.get_direction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_direction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.score_tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        score_tokens
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.steer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        steer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.ablate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ablate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.clamp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clamp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.amplify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        amplify
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.plot_logit_lens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        plot_logit_lens
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.export_gguf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        export_gguf
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        report
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.probe.TokenScores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TokenScores
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TokenScores">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.TokenScores.plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        plot
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.probe.MultinomialProbe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MultinomialProbe
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MultinomialProbe">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.MultinomialProbe.fit_at_layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fit_at_layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.MultinomialProbe.fit_best_layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fit_best_layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.MultinomialProbe.similarity_matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        similarity_matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.MultinomialProbe.plot_similarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        plot_similarity
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.sweep.sweep" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sweep
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.sweep.GroupFit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GroupFit
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GroupFit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.sweep.GroupFit.plot_layer_selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        plot_layer_selection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.sweep.GroupFit.plot_similarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        plot_similarity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.sweep.GroupFit.report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.sweep.GroupFit.window" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        window
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.sweep.GroupFit.save" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        save
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.sweep.GroupFit.load" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        load
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.sweep.CompositeProbe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CompositeProbe
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CompositeProbe">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.sweep.CompositeProbe.export_gguf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        export_gguf
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.sweep.CompositeProbe.steer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        steer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.sweep.compose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        compose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.sweep.window" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        window
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.calibrate.calibrate_alpha" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        calibrate_alpha
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.eval.evaluate_steering_effect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        evaluate_steering_effect
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.extract.extract_activations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        extract_activations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.extract.extract_group_activations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        extract_group_activations
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../intervention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../generate/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../viz/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../other/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Other
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Probe
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Probe">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.direction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        direction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.auc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        auc
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.fit_all" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fit_all
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.best_layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        best_layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.get_direction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_direction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.score_tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        score_tokens
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.steer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        steer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.ablate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ablate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.clamp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clamp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.amplify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        amplify
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.plot_logit_lens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        plot_logit_lens
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.export_gguf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        export_gguf
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        report
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.probe.TokenScores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TokenScores
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TokenScores">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.TokenScores.plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        plot
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.probe.MultinomialProbe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MultinomialProbe
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MultinomialProbe">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.MultinomialProbe.fit_at_layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fit_at_layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.MultinomialProbe.fit_best_layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fit_best_layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.MultinomialProbe.similarity_matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        similarity_matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.MultinomialProbe.plot_similarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        plot_similarity
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.sweep.sweep" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sweep
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.sweep.GroupFit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GroupFit
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GroupFit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.sweep.GroupFit.plot_layer_selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        plot_layer_selection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.sweep.GroupFit.plot_similarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        plot_similarity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.sweep.GroupFit.report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.sweep.GroupFit.window" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        window
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.sweep.GroupFit.save" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        save
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.sweep.GroupFit.load" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        load
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.sweep.CompositeProbe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CompositeProbe
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CompositeProbe">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.sweep.CompositeProbe.export_gguf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        export_gguf
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.sweep.CompositeProbe.steer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        steer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.sweep.compose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        compose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.sweep.window" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        window
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.calibrate.calibrate_alpha" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        calibrate_alpha
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.eval.evaluate_steering_effect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        evaluate_steering_effect
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.extract.extract_activations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        extract_activations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steerkit.extract.extract_group_activations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        extract_group_activations
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="probes-sweeps">Probes &amp; sweeps<a class="headerlink" href="#probes-sweeps" title="Permanent link">&para;</a></h1>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="steerkit.probe.Probe" class="doc doc-heading">
+            <code>steerkit.probe.Probe</code>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#steerkit.probe.Probe" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+
+
+
+        <p>Multi-direction linear probe at a single layer.</p>
+<p><code>directions</code> holds one unit-normalized [d_model] vector per probe family.
+<code>metrics</code> holds named scalars (e.g. auc_test_logistic, cohens_d_logistic).
+<code>default_method</code> chooses which direction Probe.steer() uses by default.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="steerkit.probe.Probe.direction" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">direction</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#steerkit.probe.Probe.direction" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>The default-method direction tensor, ready for arithmetic.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="steerkit.probe.Probe.auc" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">auc</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#steerkit.probe.Probe.auc" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Held-out logistic AUC if available, else train AUC, else NaN.</p>
+
+    </div>
+
+</div>
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.probe.Probe.fit_all" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">fit_all</span><span class="p">(</span><span class="n">activations</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">hook_site</span><span class="o">=</span><span class="s1">&#39;resid_post&#39;</span><span class="p">,</span> <span class="n">test_fraction</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">default_method</span><span class="o">=</span><span class="s1">&#39;logistic&#39;</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#steerkit.probe.Probe.fit_all" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Fit one Probe per layer with all three candidate directions + cheap-tier metrics.</p>
+
+
+<details class="for-each-layer-the-training-pipeline-is" open>
+  <summary>For each layer the training pipeline is</summary>
+  <p>1) split pairs into train/test (test_fraction; pair-level split, no leakage).
+2) fit logistic regression on train activations; store coef + AUC train/test.
+3) compute difference-of-means direction on train; score AUC train/test via cosine.
+4) fit LDA with Ledoit-Wolf shrinkage on train; score AUC train/test via decision_function.
+5) compute Cohen's d on the held-out logistic decision-function scores.</p>
+</details>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.probe.Probe.best_layer" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">best_layer</span><span class="p">(</span><span class="n">probes</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s1">&#39;auc_test_logistic&#39;</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-staticmethod"><code>staticmethod</code></small>
+  </span>
+
+<a href="#steerkit.probe.Probe.best_layer" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Pick the layer that maximizes the given metric. Falls back to a cheap-tier alternative
+if the requested metric isn't present (e.g. when test_fraction=0).</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.probe.Probe.get_direction" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_direction</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#steerkit.probe.Probe.get_direction" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return the unit direction for the given method (defaults to default_method).</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.probe.Probe.score_tokens" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">score_tokens</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">response</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">include_prompt</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+<a href="#steerkit.probe.Probe.score_tokens" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Project every token's residual-stream activation at this probe's layer
+onto this probe's direction. Returns a <code>TokenScores</code> with token strings
+aligned to scalar scores, one per position.</p>
+<p>This is the interpretability complement to <code>steer()</code>: where <code>steer()</code> <em>uses</em>
+the direction to push generation, <code>score_tokens()</code> <em>measures</em> where in a
+sequence the direction is most active. Useful for asking questions like
+"which tokens in this refusal actually carry the refusal signal?" or
+"did my steering hook push activations the way I expected?".</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="steerkit.models.ModelHandle" href="../other/#steerkit.models.ModelHandle">ModelHandle</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a loaded ModelHandle (any model — the probe's model_id is checked
+only at steering time, not here).</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>prompt</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the user prompt to score (or pre-pend to <code>response</code>).</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>response</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>optional assistant response to score. Default <code>None</code> scores
+the prompt-only formatting.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>method</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>which probe-family direction to project onto. Defaults to
+<code>default_method</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>include_prompt</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>when True, scores are returned for every token in the
+full chat-formatted sequence, with <code>response_start</code> indicating
+where the response begins. When False (default) and <code>response</code>
+is supplied, prompt tokens are sliced off so you get only the
+response-side scores.</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="steerkit.probe.TokenScores
+
+
+  
+      dataclass
+  " href="#steerkit.probe.TokenScores">TokenScores</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>TokenScores(tokens, scores, layer, method, response_start). Call</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="steerkit.probe.TokenScores
+
+
+  
+      dataclass
+  " href="#steerkit.probe.TokenScores">TokenScores</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p><code>.plot()</code> for a heatmap-style visualization.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+        <p>Note: scores are raw <code>direction · activation</code> projections — the sign and
+magnitude are interpretable <em>within</em> one sequence (which token fires hardest)
+but not across sequences without calibration. The logistic-method bias is
+omitted because it shifts all positions equally and does not change the
+relative ranking that this view is for.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.probe.Probe.steer" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">steer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="s1">&#39;addition&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_new_tokens</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span></code>
+
+<a href="#steerkit.probe.Probe.steer" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Generate a steered completion. <code>op</code> selects one of the four interventions:</p>
+<p>addition (default) — <code>act ← act + α·v</code>. <code>alpha=None</code> uses the calibrated
+      <code>auto_alpha</code>, else 2.0.
+  projection — <code>act ← act − (act·v̂)v̂</code>. Ablates the concept component;
+      <code>alpha</code>/<code>target</code>/<code>gamma</code> are ignored.
+  clamp — <code>act ← act + (target − act·v̂)v̂</code>. Requires <code>target</code>. Forces
+      the concept's projection to a fixed value.
+  multiplicative — <code>act ← act + (γ−1)(act·v̂)v̂</code>. Requires <code>gamma</code>. Scales
+      the existing component along the direction.</p>
+<p>Pass <code>method</code> to override <code>default_method</code> (which probe-family direction).</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.probe.Probe.ablate" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">ablate</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+<a href="#steerkit.probe.Probe.ablate" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Convenience: steer with op='projection' (remove the concept component).</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.probe.Probe.clamp" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">clamp</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+<a href="#steerkit.probe.Probe.clamp" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Convenience: steer with op='clamp' at the given target projection value.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.probe.Probe.amplify" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">amplify</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+<a href="#steerkit.probe.Probe.amplify" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Convenience: steer with op='multiplicative' at the given gamma scaling factor.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.probe.Probe.plot_logit_lens" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">plot_logit_lens</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+<a href="#steerkit.probe.Probe.plot_logit_lens" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Convenience: render the steering direction projected through the unembed.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.probe.Probe.export_gguf" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">export_gguf</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span></code>
+
+<a href="#steerkit.probe.Probe.export_gguf" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Convenience: export this single-layer Probe to llama.cpp gguf format.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.probe.Probe.report" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">report</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">activations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">per_layer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#steerkit.probe.Probe.report" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Render a one-page HTML report. Returns the HTML string; if <code>out</code> is set,
+also writes it to disk and returns the path-as-string.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="steerkit.probe.TokenScores" class="doc doc-heading">
+            <code>steerkit.probe.TokenScores</code>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#steerkit.probe.TokenScores" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+
+
+
+        <p>Per-token probe scores along a single sequence.</p>
+<p>Built by <code>Probe.score_tokens(...)</code>. <code>scores[i]</code> is the projection of the
+token-<code>i</code> residual-stream activation (at the probe's layer) onto the
+probe's direction. Higher values mean the direction is more active at
+that token; the sign matches positive vs. negative side of the probe.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="steerkit.probe.TokenScores.tokens">tokens</span></code></td>
+            <td>
+                  <code><span title="list">list</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>decoded token strings, one per position scored.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="steerkit.probe.TokenScores.scores">scores</span></code></td>
+            <td>
+                  <code><span title="torch.Tensor">Tensor</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>1-D float tensor with one entry per token.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="steerkit.probe.TokenScores.layer">layer</span></code></td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the probe's layer index (so plots can label themselves).</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="steerkit.probe.TokenScores.method">method</span></code></td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>which probe-family direction was used (logistic / diff_of_means
+/ mass_mean).</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="steerkit.probe.TokenScores.response_start">response_start</span></code></td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>index into <code>tokens</code> where the assistant response begins.
+Always 0 when <code>score_tokens</code> was called with <code>include_prompt=False</code>
+(the prompt portion has been sliced off); otherwise marks the
+user-prompt → assistant-response boundary.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.probe.TokenScores.plot" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">plot</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+<a href="#steerkit.probe.TokenScores.plot" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Convenience: render with <code>steerkit.viz.plot_token_scores</code>.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="steerkit.probe.MultinomialProbe" class="doc doc-heading">
+            <code>steerkit.probe.MultinomialProbe</code>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#steerkit.probe.MultinomialProbe" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+
+
+
+        <p>Multi-class linear classifier across the concepts of a <code>mutually_exclusive</code> ConceptGroup.</p>
+<p>Diagnostic, not for steering: useful for "which concept is this activation expressing?"
+and for cross-concept similarity heatmaps (rows of <code>weights</code> are direction vectors,
+one per concept). Steering is still done with the per-concept binary <code>Probe</code>s.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.probe.MultinomialProbe.fit_at_layer" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">fit_at_layer</span><span class="p">(</span><span class="n">activations_by_concept</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">hook_site</span><span class="o">=</span><span class="s1">&#39;resid_post&#39;</span><span class="p">,</span> <span class="n">test_fraction</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#steerkit.probe.MultinomialProbe.fit_at_layer" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Fit a multinomial probe at one chosen layer, using each concept's positive
+activations as its class. Returns a single MultinomialProbe with held-out accuracy.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.probe.MultinomialProbe.fit_best_layer" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">fit_best_layer</span><span class="p">(</span><span class="n">activations_by_concept</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">hook_site</span><span class="o">=</span><span class="s1">&#39;resid_post&#39;</span><span class="p">,</span> <span class="n">test_fraction</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#steerkit.probe.MultinomialProbe.fit_best_layer" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Fit a multinomial probe at every layer; return the one with best test accuracy
+(or train accuracy if no test split was kept).</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.probe.MultinomialProbe.similarity_matrix" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">similarity_matrix</span><span class="p">()</span></code>
+
+<a href="#steerkit.probe.MultinomialProbe.similarity_matrix" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Cosine-similarity matrix between class direction vectors (rows of <code>weights</code>).
+Returns a [n_classes, n_classes] tensor.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.probe.MultinomialProbe.plot_similarity" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">plot_similarity</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+<a href="#steerkit.probe.MultinomialProbe.plot_similarity" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Convenience: render the cross-class similarity heatmap.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="steerkit.sweep.sweep" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">steerkit</span><span class="o">.</span><span class="n">sweep</span><span class="o">.</span><span class="n">sweep</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">hook_site</span><span class="o">=</span><span class="s1">&#39;resid_post&#39;</span><span class="p">,</span> <span class="n">test_fraction</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">select_by</span><span class="o">=</span><span class="s1">&#39;auc_test_logistic&#39;</span><span class="p">,</span> <span class="n">with_steering_eval</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">teacher</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">eval_top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">eval_alpha</span><span class="o">=</span><span class="mf">4.0</span><span class="p">)</span></code>
+
+<a href="#steerkit.sweep.sweep" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+
+        <p>Run the full Phase-3+4 sweep on a ConceptGroup.</p>
+
+
+<details class="steps" open>
+  <summary>Steps</summary>
+  <p>1) <code>extract_group_activations</code> per concept (Zarr-cached if <code>cache_dir</code> set).
+2) <code>Probe.fit_all</code> per concept + select best layer by <code>select_by</code>.
+3) For <code>mutually_exclusive</code> groups with ≥2 concepts: fit a <code>MultinomialProbe</code>
+   at the layer with highest held-out multinomial accuracy.
+4) If <code>with_steering_eval=True</code> and <code>teacher</code> is provided: call the LLM-judge
+   expensive tier on each concept's top-K layers and attach <code>metrics["steering_effect"]</code>.</p>
+</details>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="steerkit.sweep.GroupFit" class="doc doc-heading">
+            <code>steerkit.sweep.GroupFit</code>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#steerkit.sweep.GroupFit" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+
+
+
+        <p>Result of <code>sweep(group, model)</code>. Indexable by concept name to get the chosen Probe.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.sweep.GroupFit.plot_layer_selection" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">plot_layer_selection</span><span class="p">(</span><span class="n">concept_name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+<a href="#steerkit.sweep.GroupFit.plot_layer_selection" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Render the layer-selection dual-curve for one concept (requires per_concept).</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.sweep.GroupFit.plot_similarity" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">plot_similarity</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+<a href="#steerkit.sweep.GroupFit.plot_similarity" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Render the cross-concept similarity heatmap. Uses the multinomial probe if present,
+otherwise falls back to the per-concept best probes' steering directions.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.sweep.GroupFit.report" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">report</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#steerkit.sweep.GroupFit.report" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Render a one-page HTML report for this GroupFit. Returns the HTML string;
+if <code>out</code> is set, also writes it to disk and returns the path-as-string.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.sweep.GroupFit.window" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">window</span><span class="p">(</span><span class="n">concept_name</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></code>
+
+<a href="#steerkit.sweep.GroupFit.window" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Build a window-of-(2k+1) multi-layer composite around the chosen best layer
+for <code>concept_name</code>. Requires the full <code>per_concept</code> fits (i.e. not loaded from disk).</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.sweep.GroupFit.save" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">save</span><span class="p">(</span><span class="n">dir_path</span><span class="p">)</span></code>
+
+<a href="#steerkit.sweep.GroupFit.save" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Save the chosen Probe per concept + multinomial (if present) + the ConceptGroup
+snapshot (without contrast pairs) into a directory.</p>
+
+
+<details class="layout" open>
+  <summary>Layout</summary>
+  <p>dir_path/
+  group.json
+  {concept_name}.probe.safetensors      (one per concept)
+  multinomial.probe.safetensors         (only if mutex group)</p>
+</details>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.sweep.GroupFit.load" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">load</span><span class="p">(</span><span class="n">dir_path</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#steerkit.sweep.GroupFit.load" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Load a directory written by GroupFit.save.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="steerkit.sweep.CompositeProbe" class="doc doc-heading">
+            <code>steerkit.sweep.CompositeProbe</code>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#steerkit.sweep.CompositeProbe" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+
+
+
+        <p>Multiple probes' steering vectors composed at inference time.</p>
+<p>Each probe's direction is added at its own layer with its own per-probe weight
+(and per-probe alpha if desired). Probes targeting the same TL hook are
+combined into a single hook function.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.sweep.CompositeProbe.export_gguf" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">export_gguf</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span></code>
+
+<a href="#steerkit.sweep.CompositeProbe.export_gguf" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Convenience: export this composite as a multi-layer gguf control vector.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.sweep.CompositeProbe.steer" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">steer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">alphas</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_new_tokens</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span></code>
+
+<a href="#steerkit.sweep.CompositeProbe.steer" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Generate a completion with all composed probes' steering vectors active.</p>
+<p><code>alphas</code>: per-probe alpha override; defaults to each probe's auto_alpha (or 2.0).
+<code>methods</code>: per-probe direction method override.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="steerkit.sweep.compose" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">steerkit</span><span class="o">.</span><span class="n">sweep</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">probes</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#steerkit.sweep.compose" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+
+        <p>Compose multiple probes for simultaneous steering at inference time.</p>
+<p><code>weights</code> defaults to all 1.0 (equal contribution). Probes can come from
+different ConceptGroups — the design memory's "axes" composition.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="steerkit.sweep.window" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">steerkit</span><span class="o">.</span><span class="n">sweep</span><span class="o">.</span><span class="n">window</span><span class="p">(</span><span class="n">probes</span><span class="p">,</span> <span class="n">center_layer</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></code>
+
+<a href="#steerkit.sweep.window" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+
+        <p>Build a multi-layer steering composite over a window of layers around <code>center_layer</code>.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>probes</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span>[<span title="int">int</span>, <a class="autorefs autorefs-internal" title="steerkit.probe.Probe
+
+
+  
+      dataclass
+  " href="#steerkit.probe.Probe">Probe</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>full per-layer dict from <code>Probe.fit_all</code> (or <code>GroupFit.per_concept[name]</code>).</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>center_layer</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the chosen "best" layer; window is built around it.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>k</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>half-window size. k=1 (default) selects [center-1, center, center+1] — the
+ "window-of-3" mode the design memory commits to. k=0 collapses to the
+ single best probe wrapped in a CompositeProbe.</p>
+              </div>
+            </td>
+            <td>
+                  <code>1</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+        <p>The returned CompositeProbe has <code>weights = [1/n]*n</code> so each layer's contribution
+is scaled down proportionally. With each probe's <code>auto_alpha</code> left as the default
+α at steer time, the per-layer push is <code>auto_alpha / n</code> rather than <code>auto_alpha</code>,
+keeping the total perturbation roughly comparable to a single-layer steer.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="steerkit.calibrate.calibrate_alpha" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">steerkit</span><span class="o">.</span><span class="n">calibrate</span><span class="o">.</span><span class="n">calibrate_alpha</span><span class="p">(</span><span class="n">probe</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">prompts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">candidates</span><span class="o">=</span><span class="n">DEFAULT_ALPHA_CANDIDATES</span><span class="p">,</span> <span class="n">perplexity_ratio_max</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">max_new_tokens</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attach</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+<a href="#steerkit.calibrate.calibrate_alpha" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+
+        <p>Pick the largest α whose steered-output perplexity is within ratio_max of unsteered.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>probe</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="steerkit.probe.Probe
+
+
+  
+      dataclass
+  " href="#steerkit.probe.Probe">Probe</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a fitted Probe to calibrate.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="steerkit.models.ModelHandle" href="../other/#steerkit.models.ModelHandle">ModelHandle</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the model to steer.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>prompts</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>small calibration set (default: 4 generic prompts).</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>candidates</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="float">float</span>] | <span title="tuple">tuple</span>[<span title="float">float</span>, ...]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>α values to sweep, in increasing order is fine but we sort.</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="steerkit.calibrate.DEFAULT_ALPHA_CANDIDATES">DEFAULT_ALPHA_CANDIDATES</span></code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>perplexity_ratio_max</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>ceiling on steered_ppl / baseline_ppl.</p>
+              </div>
+            </td>
+            <td>
+                  <code>1.5</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>max_new_tokens</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>response length per generation.</p>
+              </div>
+            </td>
+            <td>
+                  <code>30</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>method</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>which probe direction to use (default: probe.default_method).</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>attach</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>if True, set probe.auto_alpha = chosen value before returning.</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>(<span title="best_alpha">best_alpha</span>, <span title="ratios">ratios</span>)</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>best alpha and the full {alpha: perplexity_ratio} mapping.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span>[<span title="float">float</span>, <span title="float">float</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>best_alpha is 0.0 if no candidate satisfies the constraint (steering destroys coherence</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="tuple">tuple</span>[<span title="float">float</span>, <span title="dict">dict</span>[<span title="float">float</span>, <span title="float">float</span>]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>for every α tried).</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="steerkit.eval.evaluate_steering_effect" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">steerkit</span><span class="o">.</span><span class="n">eval</span><span class="o">.</span><span class="n">evaluate_steering_effect</span><span class="p">(</span><span class="n">probes</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">teacher</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">concept_description</span><span class="p">,</span> <span class="n">eval_prompts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s1">&#39;auc_test_logistic&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">max_new_tokens</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on_failure</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attach</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+<a href="#steerkit.eval.evaluate_steering_effect" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+
+        <p>Score steering effect size for the top-K probes by a cheap-tier metric.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>probes</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span>[<span title="int">int</span>, <a class="autorefs autorefs-internal" title="steerkit.probe.Probe
+
+
+  
+      dataclass
+  " href="#steerkit.probe.Probe">Probe</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a dict of layer -&gt; Probe (e.g. from Probe.fit_all).</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="steerkit.models.ModelHandle" href="../other/#steerkit.models.ModelHandle">ModelHandle</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the model to steer.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>teacher</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="steerkit.teacher.TeacherModel" href="../generate/#steerkit.teacher.TeacherModel">TeacherModel</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the TeacherModel to use as judge (often the same as the generator).</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>concept_description</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>short description of the concept (e.g. "refusal", "verbose, expansive language").</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>eval_prompts</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>list of evaluation prompts; defaults to a small bundled set.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>top_k</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>how many top layers (by <code>by</code>) to evaluate. Use a number &gt;= len(probes) to evaluate all.</p>
+              </div>
+            </td>
+            <td>
+                  <code>5</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>by</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>cheap-tier metric for narrowing. Falls back through train metrics if missing.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;auc_test_logistic&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>alpha</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>steering strength during evaluation.</p>
+              </div>
+            </td>
+            <td>
+                  <code>4.0</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>max_new_tokens</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>response length per generation.</p>
+              </div>
+            </td>
+            <td>
+                  <code>60</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>method</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>which probe direction to use (defaults to each probe's default_method).</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>on_failure</code>
+            </td>
+            <td>
+                  <code><span title="collections.abc.Callable">Callable</span>[[<span title="int">int</span>, <span title="str">str</span>, <span title="str">str</span>], None] | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>optional callback (layer, response, raw_judge_text) when rating parsing fails.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>attach</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>if True, write <code>metrics["steering_effect"]</code> and <code>metrics["steering_effect_n"]</code>
+on each evaluated probe in place.</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+        <p>Returns a dict mapping layer index -&gt; mean steering-effect score.
+Layers not in the top-K are not evaluated and not present in the return.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="steerkit.extract.extract_activations" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">steerkit</span><span class="o">.</span><span class="n">extract</span><span class="o">.</span><span class="n">extract_activations</span><span class="p">(</span><span class="n">pairs</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">hook_site</span><span class="o">=</span><span class="s1">&#39;resid_post&#39;</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_boundaries</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span></code>
+
+<a href="#steerkit.extract.extract_activations" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+
+        <p>Extract last-token activations for each (positive, negative) response in each pair, per layer.</p>
+<p>Returns a dict mapping layer index -&gt; tensor of shape [n_pairs, 2, d_model].
+Layer index 0 is the positive response and 1 is the negative response in the second axis.</p>
+<p>With <code>include_boundaries=True</code> (default), the dict also contains entries at:
+  - layer = -1   (embedding output, TL hook 'hook_embed')
+  - layer = n_layers (final layernorm output, TL hook 'ln_final.hook_normalized')
+These let the cheap-tier sweep span [embed → 0..N-1 → final_ln] in one pass.</p>
+<p><code>cache_dir</code>: optional directory for a Zarr v3 activation cache. The cache key
+is derived from (model_id, hook_site, include_boundaries, pairs hash). On a
+cache hit we skip the model entirely and load tensors from disk.</p>
+<p><code>batch_size</code>: number of (pair, response) sequences run through the model in a
+single forward pass. Sequences are right-padded to max length per batch; causal
+attention guarantees pads don't pollute real-token activations. Set to 1 for
+a strictly sequential path (e.g. for memory-constrained big models). Default 8
+is a reasonable speedup-to-memory tradeoff for ≤4B-parameter models on MPS.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="steerkit.extract.extract_group_activations" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">steerkit</span><span class="o">.</span><span class="n">extract</span><span class="o">.</span><span class="n">extract_group_activations</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">hook_site</span><span class="o">=</span><span class="s1">&#39;resid_post&#39;</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_boundaries</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span></code>
+
+<a href="#steerkit.extract.extract_group_activations" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+
+        <p>Extract activations for every concept in a ConceptGroup.</p>
+<p>Returns a dict mapping concept_name -&gt; {layer: tensor [n_pairs, 2, d_model]}.
+Each concept's pairs are passed through the same activation pipeline. The
+<code>cache_dir</code> is forwarded to per-concept extraction; cache keys differ per
+concept because the dataset hash differs, so each concept gets its own
+Zarr store and they're loaded/written independently.</p>
+
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
