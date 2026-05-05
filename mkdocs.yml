@@ -1,0 +1,76 @@
+site_name: steerkit
+site_description: Concept-first linear probes and activation steering, reproducible across many open-weight models.
+repo_url: https://github.com/arvkevi/steerkit
+edit_uri: ""
+docs_dir: docs
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+    - content.code.annotate
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: false
+            show_bases: true
+            show_root_heading: true
+            show_object_full_path: false
+            heading_level: 3
+            members_order: source
+            docstring_style: google
+
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - Workflow: workflow.md
+  - Concept gallery: concepts.md
+  - CLI reference: cli.md
+  - API reference:
+      - Data primitives: api/data.md
+      - Probes & sweeps: api/probe.md
+      - Interventions: api/intervention.md
+      - Generation: api/generate.md
+      - Visualization: api/viz.md
+      - Other: api/other.md
+  - Design: design.md

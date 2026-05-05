@@ -1,0 +1,85 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "steerkit"
+version = "0.3.0"
+description = "Concept-first linear probes and activation steering, reproducible across many open-weight models."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Kevin Arvai", email = "arvkevi@gmail.com" }]
+license = { text = "MIT" }
+keywords = ["interpretability", "linear-probe", "steering", "representation-engineering", "transformerlens", "nnsight"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "torch>=2.4",
+    "transformer-lens>=3.1",
+    "safetensors>=0.4",
+    "scikit-learn>=1.4",
+    "numpy>=1.26",
+    "zarr>=3.0",
+    "matplotlib>=3.8",
+    "typer>=0.12",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+openai = ["openai>=1.50"]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "mypy>=1.10",
+]
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+    "mkdocstrings[python]>=0.26",
+]
+llamacpp = [
+    "gguf>=0.18.0",
+]
+
+[project.urls]
+Repository = "https://github.com/arvkevi/steerkit"
+
+[project.scripts]
+steerkit = "steerkit.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["steerkit"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["*.ipynb"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"steerkit/cli.py" = ["B008"]  # typer.Option(...) in argument defaults is the canonical pattern
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.mypy]
+python_version = "3.12"
+strict_optional = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+files = ["steerkit"]
+# Permissive about untyped third-party signatures (transformer-lens, sklearn, zarr, gguf).
+# We aim for our own surface to be type-clean, not for full strict mode across deps.
+disallow_untyped_defs = false
+check_untyped_defs = true
