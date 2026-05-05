@@ -16,8 +16,8 @@ jobs:
         with:
           fetch-depth: 0
       - uses: astral-sh/setup-uv@v3
-        with:
-          enable-cache: true
+        # cache disabled because uv.lock is gitignored — re-enable if a
+        # lockfile gets committed.
       - name: install docs deps
         run: uv sync --extra docs
       - name: deploy mkdocs site
