@@ -1,0 +1,48 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: build sdist + wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v3
+      - name: build
+        run: uv build
+      - name: lint metadata
+        run: uv run --with twine twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    # OIDC trusted publishing — see
+    # https://docs.pypi.org/trusted-publishers/. Configure on PyPI:
+    #   project: steerkit
+    #   owner:   arvkevi
+    #   repo:    steerkit
+    #   workflow:release.yml
+    #   environment: pypi
+    environment:
+      name: pypi
+      url: https://pypi.org/p/steerkit
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

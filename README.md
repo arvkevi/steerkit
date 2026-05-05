@@ -11,6 +11,15 @@ Find a concept in a local LLM, turn it into a steering direction, and save the r
 
 ## Install
 
+From PyPI (just the library + CLI):
+
+```bash
+pip install steerkit          # or: uv add steerkit
+steerkit --help
+```
+
+From source (clone for the bundled datasets, notebooks, and figure scripts):
+
 ```bash
 git clone https://github.com/arvkevi/steerkit.git
 cd steerkit
