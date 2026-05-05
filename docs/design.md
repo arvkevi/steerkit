@@ -50,6 +50,16 @@ Four, all expressed as a hook over a single direction `v` (unit-normalized):
 
 `Probe.steer(..., op=...)` dispatches; convenience methods `ablate / clamp / amplify` wrap.
 
+## Activation pooling
+
+`extract_activations(..., pooling=...)` selects how the per-token residual stream collapses to a single `[d_model]` vector per (pair, response):
+
+- **`"last"`** (default) — final real-token position. The standard choice for decoder-only LMs (Qwen / Llama / Gemma / Pythia / GPT-2): causal attention means the last token has attended to everything before it, so it carries a "summary" of the response.
+- **`"mean"`** — average across all real positions. Required for **encoder models** (BERT, RoBERTa, DeBERTa) where bidirectional attention means no position has special "summary" status; matches BERT-style classification heads.
+- **`"max"`** — element-wise max across real positions. Picks up punctate signals at unknown positions.
+
+Pad positions are sliced off before pooling so they never contaminate mean/max in the batched extraction path. The cache signature includes the pooling mode so different strategies don't collide; existing `"last"`-pooled caches keep their original signatures and remain reusable.
+
 ## Layer scope
 
 Default: single best layer. Opt-in: window-of-(2k+1) via `window(probes, center_layer, k=1)`. Out of scope (research-grade): full all-layers weighted ensemble.
@@ -60,7 +70,7 @@ Probes carry their layer in both absolute index and normalized depth (`(layer + 
 
 ## Storage
 
-- **Activation cache** — Zarr v3 directory keyed by (model_id, hook_site, include_boundaries, dataset hash). Skip the model entirely on a cache hit.
+- **Activation cache** — Zarr v3 directory keyed by (model_id, hook_site, include_boundaries, pooling, dataset hash). Skip the model entirely on a cache hit.
 - **Probe artifact** — single `.probe.safetensors` file with three direction tensors (logistic / diff_of_means / mass_mean) + biases + metrics + JSON metadata. One file = one drop-in artifact.
 - **GroupFit** — directory: `group.json` snapshot + one `.probe.safetensors` per concept + optional `multinomial.probe.safetensors`.
 - **GGUF** — `Probe.export_gguf(path)` and `CompositeProbe.export_gguf(path)` write llama.cpp-compatible control vectors (one tensor per source layer).

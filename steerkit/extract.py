@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Literal
 
 import torch
 
@@ -8,6 +9,27 @@ from .data import ContrastPair
 from .models import ModelHandle
 
 EMBED_LAYER = -1  # sentinel: pre-block-0 embedding output (TL: hook_embed)
+
+Pooling = Literal["last", "mean", "max"]
+
+
+def _pool(seq: torch.Tensor, pooling: Pooling) -> torch.Tensor:
+    """Pool a [seq_len, d_model] activation tensor down to [d_model].
+
+    * "last" — final position only (default; standard for decoder-only LMs).
+    * "mean" — average across all real positions (recommended for encoder
+      models like BERT where bidirectional attention means every position
+      sees the whole input).
+    * "max"  — element-wise max across all real positions (picks up
+      punctate signals).
+    """
+    if pooling == "last":
+        return seq[-1]
+    if pooling == "mean":
+        return seq.mean(dim=0)
+    if pooling == "max":
+        return seq.amax(dim=0)
+    raise ValueError(f"unknown pooling {pooling!r}; expected one of last / mean / max")
 
 
 def _final_ln_layer(n_layers: int) -> int:
@@ -50,6 +72,7 @@ def extract_group_activations(
     include_boundaries: bool = True,
     cache_dir: str | Path | None = None,
     batch_size: int = 8,
+    pooling: Pooling = "last",
 ) -> dict[str, dict[int, torch.Tensor]]:
     """Extract activations for every concept in a ConceptGroup.
 
@@ -73,6 +96,7 @@ def extract_group_activations(
             include_boundaries=include_boundaries,
             cache_dir=cache_dir,
             batch_size=batch_size,
+            pooling=pooling,
         )
     return out
 
@@ -94,12 +118,12 @@ def _extract_batched(
     hook_names: dict[int, str],
     *,
     batch_size: int,
+    pooling: Pooling = "last",
 ) -> dict[int, torch.Tensor]:
     """Right-pad batches of (prompt, response) sequences and run them through the
-    model with `run_with_cache`. Last-token activations are read at each item's
-    final real position (pre-pad), so right-pad tokens never affect the result —
-    causal attention prevents real positions from looking at future pads. The
-    output is bit-equivalent to the sequential path, modulo float-op order on MPS.
+    model with `run_with_cache`. Activations are pooled (default last-token)
+    over each item's *real* positions only — pad positions are excluded so they
+    never contaminate mean/max pooling.
     """
     n_pairs = len(pairs)
     d_model = model.d_model
@@ -139,7 +163,9 @@ def _extract_batched(
         for batch_i, (pair_i, resp_i, _, _) in enumerate(batch):
             last_pos = last_positions[batch_i]
             for layer in layer_indices:
-                act = cache[hook_names[layer]][batch_i, last_pos, :]
+                # Slice off pads before pooling so mean/max never see them.
+                seq = cache[hook_names[layer]][batch_i, : last_pos + 1, :]
+                act = _pool(seq, pooling)
                 out[layer][pair_i, resp_i] = act.float().cpu()
 
     return out
@@ -151,6 +177,8 @@ def _extract_sequential(
     model: ModelHandle,
     layer_indices: list[int],
     hook_names: dict[int, str],
+    *,
+    pooling: Pooling = "last",
 ) -> dict[int, torch.Tensor]:
     """One forward pass per (pair, response). Same output shape as `_extract_batched`."""
     n_pairs = len(pairs)
@@ -164,8 +192,9 @@ def _extract_sequential(
             tokens = model.format_chat(pair.prompt, response)
             _, cache = model.hooked.run_with_cache(tokens, names_filter=names_filter)
             for layer in layer_indices:
-                last_tok_act = cache[hook_names[layer]][0, -1, :]
-                out[layer][i, j] = last_tok_act.float().cpu()
+                seq = cache[hook_names[layer]][0]
+                act = _pool(seq, pooling)
+                out[layer][i, j] = act.float().cpu()
     return out
 
 
@@ -178,8 +207,9 @@ def extract_activations(
     include_boundaries: bool = True,
     cache_dir: str | Path | None = None,
     batch_size: int = 8,
+    pooling: Pooling = "last",
 ) -> dict[int, torch.Tensor]:
-    """Extract last-token activations for each (positive, negative) response in each pair, per layer.
+    """Extract pooled activations for each (positive, negative) response in each pair, per layer.
 
     Returns a dict mapping layer index -> tensor of shape [n_pairs, 2, d_model].
     Layer index 0 is the positive response and 1 is the negative response in the second axis.
@@ -189,15 +219,30 @@ def extract_activations(
       - layer = n_layers (final layernorm output, TL hook 'ln_final.hook_normalized')
     These let the cheap-tier sweep span [embed → 0..N-1 → final_ln] in one pass.
 
+    `pooling` selects how the per-token residual stream is reduced to a single
+    [d_model] vector per (pair, response):
+
+      - **"last"** (default): final real-token position. Standard for decoder-only
+        autoregressive LMs (Qwen / Llama / Gemma / Pythia / GPT-2): causal
+        attention means the last token has attended to everything before it,
+        so it carries a "summary" of the response.
+      - **"mean"**: average across all real positions. **Use this for encoder
+        models** (BERT, RoBERTa, DeBERTa, ...) — bidirectional attention means
+        every position sees the whole input, so the last token has no special
+        summary status. Mean-pooling matches BERT-style classification heads.
+      - **"max"**: element-wise max across real positions. Picks up punctate
+        signals at unknown positions; less common but occasionally useful.
+
     `cache_dir`: optional directory for a Zarr v3 activation cache. The cache key
-    is derived from (model_id, hook_site, include_boundaries, pairs hash). On a
-    cache hit we skip the model entirely and load tensors from disk.
+    is derived from (model_id, hook_site, include_boundaries, pooling, pairs hash).
+    On a cache hit we skip the model entirely and load tensors from disk.
 
     `batch_size`: number of (pair, response) sequences run through the model in a
-    single forward pass. Sequences are right-padded to max length per batch; causal
-    attention guarantees pads don't pollute real-token activations. Set to 1 for
-    a strictly sequential path (e.g. for memory-constrained big models). Default 8
-    is a reasonable speedup-to-memory tradeoff for ≤4B-parameter models on MPS.
+    single forward pass. Sequences are right-padded to max length per batch; pad
+    positions are sliced off before pooling so they never affect mean/max. Set to
+    1 for a strictly sequential path (e.g. for memory-constrained big models).
+    Default 8 is a reasonable speedup-to-memory tradeoff for ≤4B-parameter models
+    on MPS.
     """
     n_pairs = len(pairs)
     n_layers = model.n_layers
@@ -217,6 +262,7 @@ def extract_activations(
             hook_site=hook_site,
             include_boundaries=include_boundaries,
             pairs_hash=pairs_hash,
+            pooling=pooling,
         )
         cache_target = cache_path(cache_dir, sig)
         if cache_target.exists():
@@ -229,10 +275,11 @@ def extract_activations(
                 pass
 
     if batch_size <= 1:
-        out = _extract_sequential(pairs, model, layer_indices, hook_names)
+        out = _extract_sequential(pairs, model, layer_indices, hook_names, pooling=pooling)
     else:
         out = _extract_batched(
-            pairs, model, layer_indices, hook_names, batch_size=batch_size
+            pairs, model, layer_indices, hook_names,
+            batch_size=batch_size, pooling=pooling,
         )
 
     if cache_target is not None and pairs_hash is not None:
@@ -245,6 +292,7 @@ def extract_activations(
                 "model_id": model.model_id,
                 "hook_site": hook_site,
                 "include_boundaries": include_boundaries,
+                "pooling": pooling,
                 "pairs_hash": pairs_hash,
                 "n_pairs": n_pairs,
                 "d_model": d_model,

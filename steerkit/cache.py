@@ -47,12 +47,24 @@ def hash_pairs(pairs: list[ContrastPair]) -> str:
 
 
 def cache_signature(
-    *, model_id: str, hook_site: str, include_boundaries: bool, pairs_hash: str
+    *,
+    model_id: str,
+    hook_site: str,
+    include_boundaries: bool,
+    pairs_hash: str,
+    pooling: str = "last",
 ) -> str:
-    """Stable signature string used as the cache filename. Filesystem-safe."""
+    """Stable signature string used as the cache filename. Filesystem-safe.
+
+    `pooling` defaults to "last" so existing cache files (written before
+    pooling support) keep their original signature and remain reusable.
+    Non-default pooling modes get an extra suffix that bypasses the legacy
+    cache for that activation strategy.
+    """
     safe_model = model_id.replace("/", "--").replace(":", "_")
     boundaries = "boundaries" if include_boundaries else "blocks"
-    return f"{safe_model}__{hook_site}__{boundaries}__{pairs_hash}"
+    suffix = "" if pooling == "last" else f"__{pooling}"
+    return f"{safe_model}__{hook_site}__{boundaries}__{pairs_hash}{suffix}"
 
 
 def cache_path(cache_dir: str | Path, signature: str) -> Path:
