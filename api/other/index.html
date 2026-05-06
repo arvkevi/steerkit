@@ -822,6 +822,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#steerkit.models.ModelHandle.is_encoder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        is_encoder
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#steerkit.models.ModelHandle.format_chat" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1007,6 +1018,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#steerkit.models.ModelHandle.is_encoder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        is_encoder
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#steerkit.models.ModelHandle.format_chat" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1123,14 +1145,19 @@
 
 
 <h3 id="steerkit.models.load" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">steerkit</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">model_id</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">steerkit</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">model_id</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">encoder</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 <a href="#steerkit.models.load" class="headerlink" title="Permanent link">&para;</a></h3>
 
 
     <div class="doc doc-contents first">
 
-        <p>Load a model into a ModelHandle. Defaults to MPS on Apple Silicon, CUDA otherwise, else CPU.</p>
+        <p>Load a model into a ModelHandle.</p>
+<p><code>encoder=None</code> (default) auto-detects: model ids containing 'bert',
+'roberta', 'deberta', 'electra', or 'albert' are loaded via
+<code>HookedEncoder</code>; everything else goes through <code>HookedTransformer</code>.
+Pass <code>encoder=True</code> / <code>encoder=False</code> to override.</p>
+<p>Devices: MPS on Apple Silicon, CUDA otherwise, else CPU.</p>
 
 
     </div>
@@ -1152,7 +1179,9 @@
 
 
 
-        <p>Thin wrapper over a TransformerLens HookedTransformer carrying tokenizer + config conveniences.</p>
+        <p>Thin wrapper over a TransformerLens HookedTransformer / HookedEncoder
+carrying tokenizer + config conveniences. Both backends share the
+<code>run_with_cache</code> and <code>hooks(...)</code> interfaces this library uses.</p>
 
 
 
@@ -1171,6 +1200,30 @@
 
 
 
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="steerkit.models.ModelHandle.is_encoder" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">is_encoder</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#steerkit.models.ModelHandle.is_encoder" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>True if backed by <code>HookedEncoder</code> (BERT-style; bidirectional, no
+autoregressive <code>generate</code>). Use <code>pooling="mean"</code> for these and the
+encoder-side prediction APIs (<code>probe.predict_at_mask</code>).</p>
+
+    </div>
+
+</div>
 
 
 

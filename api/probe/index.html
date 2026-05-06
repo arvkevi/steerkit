@@ -820,6 +820,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.predict_at_mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        predict_at_mask
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#steerkit.probe.Probe.export_gguf" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1442,6 +1453,17 @@
     <span class="md-ellipsis">
       
         plot_logit_lens
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#steerkit.probe.Probe.predict_at_mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        predict_at_mask
       
     </span>
   </a>
@@ -2212,6 +2234,36 @@ relative ranking that this view is for.</p>
     <div class="doc doc-contents ">
 
         <p>Convenience: render the steering direction projected through the unembed.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="steerkit.probe.Probe.predict_at_mask" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">predict_at_mask</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="s1">&#39;addition&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#steerkit.probe.Probe.predict_at_mask" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Run a <em>single</em> forward pass with the steering hook on, then read the
+top-K vocabulary predictions at every <code>[MASK]</code> token in <code>text</code>.</p>
+<p>This is the encoder analog of <code>Probe.steer(...)</code> — encoder models
+don't autoregressively generate, but they expose token-level logits at
+each position. For a sentence like <code>"I think this movie is [MASK]."</code>,
+this returns the top-K most-probable fillers for the mask, with the
+steering direction applied to the residual stream at the probe's layer.</p>
+<p>Pass <code>alpha=0.0</code> for the unsteered baseline (the hook is still
+installed but contributes nothing) — the typical use is to call this
+once with <code>alpha=0.0</code> and once at the calibrated <code>auto_alpha</code> and
+compare the resulting top-K distributions side-by-side.</p>
+<p>Returns a <code>{mask_position: [(token_string, probability), ...]}</code> dict.
+Raises <code>ValueError</code> if the input contains no <code>[MASK]</code> tokens.</p>
 
 
     </div>
