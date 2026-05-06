@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import torch
-from transformer_lens import HookedTransformer
+from transformer_lens import HookedEncoder, HookedTransformer
+
+# Substrings in model ids that signal an encoder-only architecture. TL routes
+# these through HookedEncoder; everything else goes through HookedTransformer.
+_ENCODER_PATTERNS = ("bert", "roberta", "deberta", "electra", "albert")
 
 
 def _default_device() -> str:
@@ -12,13 +16,29 @@ def _default_device() -> str:
     return "cpu"
 
 
-class ModelHandle:
-    """Thin wrapper over a TransformerLens HookedTransformer carrying tokenizer + config conveniences."""
+def _looks_like_encoder(model_id: str) -> bool:
+    name = model_id.lower()
+    return any(p in name for p in _ENCODER_PATTERNS)
 
-    def __init__(self, hooked: HookedTransformer, model_id: str):
+
+class ModelHandle:
+    """Thin wrapper over a TransformerLens HookedTransformer / HookedEncoder
+    carrying tokenizer + config conveniences. Both backends share the
+    `run_with_cache` and `hooks(...)` interfaces this library uses.
+    """
+
+    def __init__(self, hooked, model_id: str):
         self.hooked = hooked
         self.model_id = model_id
         self.tokenizer = hooked.tokenizer
+
+    @property
+    def is_encoder(self) -> bool:
+        """True if backed by `HookedEncoder` (BERT-style; bidirectional, no
+        autoregressive `generate`). Use `pooling="mean"` for these and the
+        encoder-side prediction APIs (`probe.predict_at_mask`).
+        """
+        return isinstance(self.hooked, HookedEncoder)
 
     @property
     def n_layers(self) -> int:
@@ -67,17 +87,39 @@ class ModelHandle:
         return ids.to(self.device)
 
 
-def load(model_id: str, device: str | None = None, dtype: torch.dtype | None = None) -> ModelHandle:
-    """Load a model into a ModelHandle. Defaults to MPS on Apple Silicon, CUDA otherwise, else CPU."""
+def load(
+    model_id: str,
+    device: str | None = None,
+    dtype: torch.dtype | None = None,
+    *,
+    encoder: bool | None = None,
+) -> ModelHandle:
+    """Load a model into a ModelHandle.
+
+    `encoder=None` (default) auto-detects: model ids containing 'bert',
+    'roberta', 'deberta', 'electra', or 'albert' are loaded via
+    `HookedEncoder`; everything else goes through `HookedTransformer`.
+    Pass `encoder=True` / `encoder=False` to override.
+
+    Devices: MPS on Apple Silicon, CUDA otherwise, else CPU.
+    """
     if device is None:
         device = _default_device()
     if dtype is None:
         # MPS works best with float32 for now; CUDA can use float16.
         dtype = torch.float32 if device == "mps" else torch.float16
-    hooked = HookedTransformer.from_pretrained(
-        model_id,
-        device=device,
-        dtype=dtype,
-    )
+    if encoder is None:
+        encoder = _looks_like_encoder(model_id)
+    hooked: HookedEncoder | HookedTransformer
+    if encoder:
+        # HookedEncoder doesn't accept `dtype=` in from_pretrained; it loads
+        # at the model's native dtype and follows the device kwarg.
+        hooked = HookedEncoder.from_pretrained(model_id, device=device)
+    else:
+        hooked = HookedTransformer.from_pretrained(
+            model_id,
+            device=device,
+            dtype=dtype,
+        )
     hooked.eval()
     return ModelHandle(hooked, model_id=model_id)

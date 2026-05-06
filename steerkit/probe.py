@@ -508,6 +508,80 @@ class Probe:
 
         return plot_logit_lens(self, model, **kwargs)
 
+    @torch.no_grad()
+    def predict_at_mask(
+        self,
+        model: ModelHandle,
+        text: str,
+        *,
+        top_k: int = 10,
+        alpha: float | None = None,
+        method: str | None = None,
+        op: str = "addition",
+        target: float | None = None,
+        gamma: float | None = None,
+    ) -> dict[int, list[tuple[str, float]]]:
+        """Run a *single* forward pass with the steering hook on, then read the
+        top-K vocabulary predictions at every `[MASK]` token in `text`.
+
+        This is the encoder analog of `Probe.steer(...)` — encoder models
+        don't autoregressively generate, but they expose token-level logits at
+        each position. For a sentence like ``"I think this movie is [MASK]."``,
+        this returns the top-K most-probable fillers for the mask, with the
+        steering direction applied to the residual stream at the probe's layer.
+
+        Pass `alpha=0.0` for the unsteered baseline (the hook is still
+        installed but contributes nothing) — the typical use is to call this
+        once with `alpha=0.0` and once at the calibrated `auto_alpha` and
+        compare the resulting top-K distributions side-by-side.
+
+        Returns a `{mask_position: [(token_string, probability), ...]}` dict.
+        Raises `ValueError` if the input contains no `[MASK]` tokens.
+        """
+        from typing import cast
+
+        from .intervention import OPERATIONS, Operation, make_hook
+
+        tokenizer = model.tokenizer
+        assert tokenizer is not None, "model has no tokenizer attached"
+        mask_id = getattr(tokenizer, "mask_token_id", None)
+        if mask_id is None:
+            raise ValueError(
+                "tokenizer has no mask_token_id — predict_at_mask is only meaningful "
+                "for masked-LM tokenizers (BERT / RoBERTa / DeBERTa / ...)."
+            )
+
+        if op not in OPERATIONS:
+            raise ValueError(f"unknown op {op!r}; choose one of {OPERATIONS}")
+        op_typed = cast(Operation, op)
+        if op == "addition" and alpha is None:
+            alpha = self.auto_alpha if self.auto_alpha is not None else 2.0
+
+        ids = tokenizer(text, return_tensors="pt").input_ids.to(model.device)
+        mask_positions = (ids[0] == mask_id).nonzero(as_tuple=True)[0].tolist()
+        if not mask_positions:
+            raise ValueError(
+                f"no [MASK] tokens in input; tokenizer mask token is "
+                f"{tokenizer.mask_token!r} (id={mask_id}). Got: {text!r}"
+            )
+
+        direction = self.get_direction(method).to(model.device).to(model.hooked.cfg.dtype)
+        hook_fn = make_hook(op_typed, direction, alpha=alpha, target=target, gamma=gamma)
+        with model.hooked.hooks(fwd_hooks=[(self.hook_name, hook_fn)]):
+            logits = model.hooked(ids)
+        # Some HookedEncoder configs return logits directly; others may return
+        # a richer object — coerce to a tensor.
+        if hasattr(logits, "logits"):
+            logits = logits.logits
+
+        out: dict[int, list[tuple[str, float]]] = {}
+        for pos in mask_positions:
+            probs = torch.softmax(logits[0, pos, :].float(), dim=-1)
+            top_probs, top_ids = probs.topk(top_k)
+            decoded = [str(tokenizer.decode([int(i.item())])) for i in top_ids]
+            out[int(pos)] = list(zip(decoded, [float(p) for p in top_probs.tolist()], strict=True))
+        return out
+
     def export_gguf(
         self,
         path: str | Path,

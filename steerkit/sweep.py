@@ -313,7 +313,7 @@ class CompositeProbe:
         tokens = model.format_chat(prompt)
         tokenizer = model.tokenizer
         assert tokenizer is not None
-        with model.hooked.hooks(fwd_hooks=fwd_hooks):  # type: ignore[arg-type]
+        with model.hooked.hooks(fwd_hooks=fwd_hooks):
             output_ids = model.hooked.generate(
                 tokens,
                 max_new_tokens=max_new_tokens,
